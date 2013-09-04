@@ -3,7 +3,7 @@
 
 import sys
 from optparse import OptionParser
-import boto, boto.ec2
+import boto, boto.ec2.elb
 
 REGIONS = {
     # Tokyo
@@ -24,9 +24,10 @@ def main():
     region = REGIONS[opts.region]
 
     try:
-        conn = boto.ec2.connect_to_region(region)
+        elb = boto.ec2.elb.connect_to_region(region)
+        balancer = elb.get_all_load_balancers(load_balancer_names=[opts.elb])[0]
     except:
-        die("Could not connect to region")        
+        die("Could not connect to elb")
 
     # instance-idでinstanceを探す。instance-idが指定されていなければ、Nameでinstanceを探す。
     if opts.instance_id:
@@ -34,11 +35,6 @@ def main():
             instance_id = conn.get_all_instances(filters={'instance-id':opts.instance_id})[0].instances[0].id
         except:
             die("Could not find instance-id")
-    else:    
-        try:
-            instance_id = conn.get_all_instances(filters={'tag-key':'Name','tag-value':opts.src_name})[0].instances[0].id
-        except:
-            die("Could not find instance-name")
 
     if opts.debug:
         print "instance-id  : " + instance_id
@@ -61,10 +57,10 @@ if __name__ == '__main__':
         default="ap-northeast-1",
         help="The name of the region to connect to.")
     parser.add_option(
-        "--name",
-        dest="src_name",
+        "--elb",
+        dest="elb",
         default="",         
-        help="The name of the src image", metavar="src_name")
+        help="The name of the elb", metavar="elb")
     parser.add_option(
         "--instance-id",
         dest="instance_id",

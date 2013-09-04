@@ -6,11 +6,12 @@ create_launch_configuration()
     local image_id=$2
     local key_name=$3
     local sec_group=$4
+    local instance_type=$5
 
     aws autoscaling create-launch-configuration \
 	--launch-configuration-name ${conf_name} \
 	--image-id ${image_id} \
-	--instance-type t1.micro \
+	--instance-type ${instance_type} \
 	--key-name ${key_name} \
 	--security-groups ${sec_group} \
 	--region ap-northeast-1 \
@@ -80,6 +81,16 @@ desired_capacity2zero()
 	--region ap-northeast-1
 }
 
+update_tags()
+{
+    AWS_CREDENTIAL_FILE=/root/credential-as.txt
+    #AWSAccessKeyId=XXX
+    #AWSSecretKey=XXX
+    
+    tag="id=as-group-application, t=auto-scaling-group, k=Name, v=auto-scale-aptest, p=true"
+    as-create-or-update-tags --tag $tag --region "ap-northeast-1"
+}
+
 # Go
 #create_launch_configuration as-config-app-2013082203 ami-f7a83bf6
 #update_auto_scaling_group as-config-app-2013082203
@@ -90,9 +101,9 @@ desired_capacity2zero()
 
 case "$1" in
 	update)
-	        as_config=as-config-app-2013082206
-		ami=ami-054edd04
-		create_launch_configuration ${as_config} $ami
+	        as_config=as-config-app-2013090402
+		ami=ami-75d44974
+		create_launch_configuration ${as_config} $ami aws-system-hg01 default m1.small
 		update_auto_scaling_group   ${as_config}
 		;;
 	stop)
